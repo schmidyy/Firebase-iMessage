@@ -11,6 +11,8 @@ import Firebase
 
 class LoginController: UIViewController {
     
+    var mesController : MessagesController?
+    
     //Inputs container
     let inputContainerView : UIView = {
         let view = UIView()
@@ -80,44 +82,13 @@ class LoginController: UIViewController {
                 return
             }
             
+            self.mesController?.setupNavBarTitle()
             self.dismiss(animated: true, completion: nil)
         })
         
     }
     
-    func handleRegister(){
-        guard let email = emailTextField.text, let password = PassTextField.text, let name = nameTextField.text
-            else{
-                print("Invalid form entry")
-                return
-        }
-        FIRAuth.auth()?.createUser(withEmail: email, password: password, completion: { (user: FIRUser?, error) in
-            if error != nil {
-                print(error.debugDescription)
-                return
-            }
-            
-            guard let uid = user?.uid else {
-                return
-            }
-            
-            let ref = FIRDatabase.database().reference(fromURL: "https://realtime-imessage.firebaseio.com/")
-            //database structure /users/UID/[name, email]
-            let userRef = ref.child("users").child(uid)
-            //data to be passed in
-            let values = ["name": name, "email": email]
-            
-            userRef.updateChildValues(values, withCompletionBlock: { (err, ref) in
-                if err != nil {
-                    print(err.debugDescription)
-                    
-                    return
-                }
-                self.dismiss(animated: true , completion: nil)
-            })
-
-        })
-    }
+    
     
     let nameTextField: UITextField = {
         
@@ -158,6 +129,7 @@ class LoginController: UIViewController {
         tf.placeholder = "Password"
         tf.translatesAutoresizingMaskIntoConstraints = false
         tf.isSecureTextEntry = true
+        
         return tf
         
     }()
@@ -169,9 +141,6 @@ class LoginController: UIViewController {
         img.translatesAutoresizingMaskIntoConstraints = false
         img.contentMode = .scaleAspectFill
         
-        img.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(handleUploadImage)))
-        img.isUserInteractionEnabled = true
-        
         return img
     }()
     
@@ -181,16 +150,20 @@ class LoginController: UIViewController {
 
         picker.translatesAutoresizingMaskIntoConstraints = false
         picker.contentMode = .scaleAspectFill
-        picker.layer.masksToBounds = false
+        picker.layer.masksToBounds = true
         picker.layer.borderColor = UIColor.black.cgColor
-
+        picker.layer.cornerRadius = 25
+        //picker.layer.borderWidth = 1
+        //picker.image?.circleMasked
+        
+        picker.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(handleUploadImage)))
+        picker.isUserInteractionEnabled = true
         return picker
     }()
     
     lazy var loginRegisterSegment: UISegmentedControl = {
         let sc = UISegmentedControl(items: ["Login", "Register"])
         sc.translatesAutoresizingMaskIntoConstraints = false
-        //sc.tintColor = UIColor(r: 58, g: 21, b: 128)
         sc.tintColor = UIColor.white
         sc.selectedSegmentIndex = 1
         
@@ -216,6 +189,10 @@ class LoginController: UIViewController {
         nameContainerHeight?.isActive = false
         nameContainerHeight = nameTextField.heightAnchor.constraint(equalToConstant: loginRegisterSegment.selectedSegmentIndex == 0 ? 0 : 50)
         nameContainerHeight?.isActive = true
+        
+        btnConstraint?.isActive = false
+        btnConstraint = logRegButton.topAnchor.constraint(equalTo: loginRegisterSegment.selectedSegmentIndex == 0 ? inputContainerView.bottomAnchor : imagePicker.bottomAnchor, constant: 12)
+        btnConstraint?.isActive = true
     }
     
     override func viewDidLoad() {
@@ -226,6 +203,11 @@ class LoginController: UIViewController {
         gradientLayer.frame = self.view.frame
         gradientLayer.colors = [UIColor(r: 8, g: 221, b:214).cgColor, UIColor(r:0, g: 125, b:160).cgColor]
         view.layer.addSublayer(gradientLayer)
+        
+        let tap: UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
+        view.addGestureRecognizer(tap)
+        
+        
         
         //instantiating the input viewer
         view.addSubview(inputContainerView)
@@ -242,6 +224,12 @@ class LoginController: UIViewController {
         setupSegmentControll()
         setupUploadImageButton()
         setupSelectImageView()
+    }
+    
+    //Calls this function when the tap is recognized.
+    func dismissKeyboard() {
+        //Causes the view (or one of its embedded text fields) to resign the first responder status.
+        view.endEditing(true)
     }
     
     func setupSegmentControll() {
@@ -275,13 +263,14 @@ class LoginController: UIViewController {
         
         
     }
+
     func setupSelectImageView() {
         
         
         //Constraints :  need x,y, width and height
         //imagePicker.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
         imagePicker.leftAnchor.constraint(equalTo: logRegButton.leftAnchor).isActive = true
-        imagePicker.topAnchor.constraint(equalTo: logRegButton.bottomAnchor, constant: 12).isActive = true
+        imagePicker.topAnchor.constraint(equalTo: inputContainerView.bottomAnchor, constant: 12).isActive = true
         imagePicker.widthAnchor.constraint(equalToConstant: 50).isActive = true
         imagePicker.heightAnchor.constraint(equalToConstant: 50).isActive = true
         
@@ -294,15 +283,18 @@ class LoginController: UIViewController {
         
         //uploadImageButton.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
         uploadImageButton.rightAnchor.constraint(equalTo: logRegButton.rightAnchor).isActive = true
-        uploadImageButton.topAnchor.constraint(equalTo: logRegButton.bottomAnchor, constant: 20).isActive = true
+        //uploadImageButton.topAnchor.constraint(equalTo: logRegButton.bottomAnchor, constant: 20).isActive = true
+        uploadImageButton.centerYAnchor.constraint(equalTo: imagePicker.centerYAnchor).isActive = true
         uploadImageButton.widthAnchor.constraint(equalTo: inputContainerView.widthAnchor, constant: -65).isActive = true
         uploadImageButton.heightAnchor.constraint(equalToConstant: 35).isActive = true
     }
+    var btnConstraint : NSLayoutConstraint?
     func setupLogRegButton(){
         
         //Constraints :  need x,y, width and height
         logRegButton.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
-        logRegButton.topAnchor.constraint(equalTo: inputContainerView.bottomAnchor, constant: 12).isActive = true
+        btnConstraint = logRegButton.topAnchor.constraint(equalTo: imagePicker.bottomAnchor, constant: 12)
+        btnConstraint?.isActive = true
         
         //how wide
         logRegButton.widthAnchor.constraint(equalTo: inputContainerView.widthAnchor).isActive = true

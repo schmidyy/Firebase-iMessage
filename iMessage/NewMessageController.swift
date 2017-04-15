@@ -21,15 +21,17 @@ class NewMessageController: UITableViewController {
         
         tableView.register(UserCell.self, forCellReuseIdentifier: cellID)
         
+        
+        
         fetchUserData()
     }
     
     func fetchUserData(){
         FIRDatabase.database().reference().child("users").observe(.childAdded, with: { (snapshot) in
             
-            if let dict = snapshot.value as? [String: AnyObject]{
-                let user = User()
-                user.setValuesForKeys(dict)
+            if let dict = snapshot.value as? [String: String]{
+                let user = User(dictionary: dict)
+                user.id = snapshot.key
                 self.users.append(user)
                 
                 DispatchQueue.main.async(execute: { 
@@ -50,23 +52,34 @@ class NewMessageController: UITableViewController {
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {        
-        let cell = tableView.dequeueReusableCell(withIdentifier: cellID, for: indexPath)
+        let cell = tableView.dequeueReusableCell(withIdentifier: cellID, for: indexPath) as! UserCell
         
         let user = self.users[indexPath.row]
         cell.textLabel?.text = user.name
         cell.detailTextLabel?.text = user.email
+
+        
+        if let profileImageUrl = user.profileImageURL {
+            cell.profileImageView.loadImageUsingCacheWithUrlString(profileImageUrl)
+        }
+        //cell.profileImageView.image = UIImage(named: "userPlaceholder")
+        
         return cell
     }
-
-}
-
-
-class UserCell: UITableViewCell {
-    override init(style: UITableViewCellStyle, reuseIdentifier: String?) {
-        super.init(style: .subtitle, reuseIdentifier: reuseIdentifier)
+    
+    override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        return 72
     }
     
-    required init?(coder aDecoder: NSCoder) {
-        fatalError("INIT error")
+    var mes : MessagesController?
+    
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        dismiss(animated: true) {
+            let user = self.users[indexPath.row]
+            self.mes?.showChatController(user: user)
+        }
     }
+
 }
+
+
