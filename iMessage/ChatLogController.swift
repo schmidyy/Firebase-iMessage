@@ -9,13 +9,79 @@
 import UIKit
 import Firebase
 
-class ChatLogController: UICollectionViewController, UITextFieldDelegate {
+class ChatLogController: UICollectionViewController, UITextFieldDelegate, UICollectionViewDelegateFlowLayout {
     
     var user: User? {
         didSet{
             navigationItem.title = user?.name
+            
+            observeMessage()
         }
     }
+    
+    var messages = [Message]()
+    
+    func observeMessage() {
+        guard let uid = FIRAuth.auth()?.currentUser?.uid else {
+            return
+        }
+        let ref = FIRDatabase.database().reference().child("user-messages").child(uid)
+        ref.observe(.childAdded, with: { (snapshot) in
+            
+            let messageID = snapshot.key
+            let messageRef = FIRDatabase.database().reference().child("messages").child(messageID)
+            
+            messageRef.observeSingleEvent(of: .value, with: { (snapshot) in
+                guard let dictionary = snapshot.value as? [String: AnyObject] else {
+                    return
+                }
+                let message = Message(dictionary: dictionary)
+                message.setValuesForKeys(dictionary)
+                
+                if message.chatPartnerID() == self.user?.id{
+                    self.messages.append(message)
+                    
+                    DispatchQueue.main.async(execute: {
+                    self.collectionView?.reloadData()
+                })
+                }
+            }, withCancel: nil)
+            
+        }, withCancel: nil)
+    }
+    
+    func observeMessages() {
+        guard let uid = FIRAuth.auth()?.currentUser?.uid else {
+            return
+        }
+        
+        let userMessagesRef = FIRDatabase.database().reference().child("user-messages").child(uid)
+        userMessagesRef.observe(.childAdded, with: { (snapshot) in
+            
+            let messageId = snapshot.key
+            let messagesRef = FIRDatabase.database().reference().child("messages").child(messageId)
+            messagesRef.observeSingleEvent(of: .value, with: { (snapshot) in
+                
+                guard let dictionary = snapshot.value as? [String: AnyObject] else {
+                    return
+                }
+                
+                let message = Message(dictionary: dictionary)
+                //potential of crashing if keys don't match
+                message.setValuesForKeys(dictionary)
+                
+                if message.chatPartnerID() == self.user?.id {
+                    self.messages.append(message)
+                    DispatchQueue.main.async(execute: {
+                        self.collectionView?.reloadData()
+                    })
+                }
+                
+            }, withCancel: nil)
+            
+        }, withCancel: nil)
+    }
+    
     
     lazy var inputTextField: UITextField = {
         let textField = UITextField()
@@ -25,10 +91,14 @@ class ChatLogController: UICollectionViewController, UITextFieldDelegate {
         return textField
     }()
     
+    let cellID = "cellId"
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
         collectionView?.backgroundColor = UIColor.white
+        collectionView?.alwaysBounceVertical = true
+        collectionView?.register(ChatMessageCell.self, forCellWithReuseIdentifier: cellID)
         
         navigationItem.leftBarButtonItem = UIBarButtonItem(title: "Cancel", style: .plain, target: self, action: #selector(handleDismiss))
         
@@ -38,6 +108,25 @@ class ChatLogController: UICollectionViewController, UITextFieldDelegate {
         setupInputComponents()
         //collectionView?.delegate = self
     }
+    
+    override func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        return messages.count
+    }
+    
+    override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: cellID, for: indexPath) as! ChatMessageCell
+        
+        let message = messages[indexPath.item]
+        cell.textView.text = message.text
+        return cell
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+        var height : CGFloat = 80
+        return CGSize(width: view.frame.width, height: hieght)
+    }
+    
+    
     //Calls this function when the tap is recognized.
     func dismissKeyboard() {
         //Causes the view (or one of its embedded text fields) to resign the first responder status.
@@ -50,6 +139,7 @@ class ChatLogController: UICollectionViewController, UITextFieldDelegate {
     
     func setupInputComponents() {
         let containerView = UIView()
+        containerView.backgroundColor = UIColor.white
         containerView.translatesAutoresizingMaskIntoConstraints = false
         
         view.addSubview(containerView)
@@ -99,6 +189,21 @@ class ChatLogController: UICollectionViewController, UITextFieldDelegate {
         let values = ["text": inputTextField.text!, "toID": toID, "fromID": fromID, "timestamp": timestamp] as [String : Any]
         childRef.updateChildValues(values)
         inputTextField.text = nil
+        
+        childRef.updateChildValues(values) { (error, ref) in
+            if error != nil {
+                print(error.debugDescription)
+                return
+            }
+            
+            let userMessagesRef = FIRDatabase.database().reference().child("user-messages").child(fromID)
+            
+            let messageId = childRef.key
+            userMessagesRef.updateChildValues([messageId: 1])
+            
+            let recipientRef = FIRDatabase.database().reference().child("user-messages").child(toID)
+            recipientRef.updateChildValues([messageId: 1])
+        }
     }
     
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {

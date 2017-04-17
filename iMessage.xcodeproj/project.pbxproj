@@ -24,6 +24,7 @@
 		270002441E9EFB7E00FBD039 /* ChatLogController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270002431E9EFB7E00FBD039 /* ChatLogController.swift */; };
 		270002461EA035C900FBD039 /* Message.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270002451EA035C900FBD039 /* Message.swift */; };
 		270002491EA288FC00FBD039 /* UserCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270002481EA288FC00FBD039 /* UserCell.swift */; };
+		276491021EA4F6D000818380 /* ChatMessageCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276491011EA4F6D000818380 /* ChatMessageCell.swift */; };
 		7686D62D1E7A17A862E487B5 /* Pods_iMessageUITests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4B9FBFE3F11B96EB022A7068 /* Pods_iMessageUITests.framework */; };
 		E6F14ACA1C225AF88E5BAAE5 /* Pods_iMessageTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 065E3926B5CA64DE2A7245BA /* Pods_iMessageTests.framework */; };
 /* End PBXBuildFile section */
@@ -70,6 +71,7 @@
 		270002431E9EFB7E00FBD039 /* ChatLogController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatLogController.swift; sourceTree = "<group>"; };
 		270002451EA035C900FBD039 /* Message.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Message.swift; sourceTree = "<group>"; };
 		270002481EA288FC00FBD039 /* UserCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UserCell.swift; sourceTree = "<group>"; };
+		276491011EA4F6D000818380 /* ChatMessageCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatMessageCell.swift; sourceTree = "<group>"; };
 		449F49563474D613AA40E2F7 /* Pods-iMessageTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-iMessageTests.debug.xcconfig"; path = "Pods/Target Support Files/Pods-iMessageTests/Pods-iMessageTests.debug.xcconfig"; sourceTree = "<group>"; };
 		4B429F1ED291A3B36CC3A7F9 /* Pods-iMessageUITests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-iMessageUITests.release.xcconfig"; path = "Pods/Target Support Files/Pods-iMessageUITests/Pods-iMessageUITests.release.xcconfig"; sourceTree = "<group>"; };
 		4B9FBFE3F11B96EB022A7068 /* Pods_iMessageUITests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_iMessageUITests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -189,6 +191,7 @@
 			isa = PBXGroup;
 			children = (
 				270002481EA288FC00FBD039 /* UserCell.swift */,
+				276491011EA4F6D000818380 /* ChatMessageCell.swift */,
 			);
 			name = View;
 			sourceTree = "<group>";
@@ -508,6 +511,7 @@
 				270001B71E9990B700FBD039 /* MessagesController.swift in Sources */,
 				270001E61E9A995300FBD039 /* LoginController.swift in Sources */,
 				270001EB1E9BB69A00FBD039 /* User.swift in Sources */,
+				276491021EA4F6D000818380 /* ChatMessageCell.swift in Sources */,
 				270001B51E9990B700FBD039 /* AppDelegate.swift in Sources */,
 				270002491EA288FC00FBD039 /* UserCell.swift in Sources */,
 				270001EF1E9EAF8900FBD039 /* Extensions.swift in Sources */,
